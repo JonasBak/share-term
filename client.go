@@ -2,7 +2,6 @@ package main
 
 import (
 	// "bytes"
-	"flag"
 	// "fmt"
 	"github.com/creack/pty"
 	"github.com/gorilla/websocket"
@@ -16,8 +15,6 @@ import (
 	"syscall"
 	"time"
 )
-
-// var addr = flag.String("addr", "localhost:8080", "http service address")
 
 type chanWriter struct {
 	Ch chan<- []byte
@@ -37,7 +34,6 @@ func Client() {
 }
 
 func connect(ch chan []byte, exit chan struct{}) {
-	flag.Parse()
 	log.SetFlags(0)
 
 	interrupt := make(chan os.Signal, 1)
