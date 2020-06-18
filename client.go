@@ -1,7 +1,6 @@
 package main
 
 import (
-	// "bytes"
 	"fmt"
 	"github.com/creack/pty"
 	"github.com/gorilla/websocket"
@@ -98,7 +97,11 @@ func connect(ch chan []byte, exit chan struct{}) (chan struct{}, error) {
 }
 
 func spawnPty(writer chanWriter) error {
-	c := exec.Command("bash")
+	shell := os.Getenv("SHELL")
+	if shell == "" {
+		shell = "bash"
+	}
+	c := exec.Command(shell)
 
 	ptmx, err := pty.Start(c)
 	if err != nil {
