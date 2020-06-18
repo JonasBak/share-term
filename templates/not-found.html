@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  html {
+    height: 100%;
+    background-color: #857c99;
+		font-family: 'Roboto Mono', sans;
+  }
+  body {
+    display: flex;
+    height: 100%;
+    margin: 0px;
+    justify-content: center;
+    align-items: center;
+  }
+  #message {
+    display: inline-block;
+    box-shadow: 10px 8px #2229;
+    padding: 40px;
+    background-color: #d8e8cf;
+  }
+</style>
+</head>
+<body>
+<div id="message">
+  The session <b>{{.}}</b> doesn't seem to exist,<br>
+  maybe the sharer disconnected?<br>
+  <a href="/">Return to front page</a>
+</div>
+</body>
+</html>

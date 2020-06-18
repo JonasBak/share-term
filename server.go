@@ -98,6 +98,7 @@ func Server() {
 	router.HandleFunc("/share", share)
 	router.HandleFunc("/sub/{session:[a-z]+}", sub)
 	router.HandleFunc("/s/{session:[a-z]+}", webUI)
+	router.HandleFunc("/", home)
 	http.Handle("/", router)
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }
@@ -108,7 +109,6 @@ func sub(w http.ResponseWriter, r *http.Request) {
 
 	if _, exists := state.s[sessionName]; !exists {
 		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "Session %s doesn't exist, TODO", sessionName)
 		return
 	}
 
@@ -135,11 +135,17 @@ func webUI(w http.ResponseWriter, r *http.Request) {
 
 	if _, exists := state.s[session]; !exists {
 		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "Session %s doesn't exist, TODO", session)
+		notFoundTemplate.Execute(w, session)
 		return
 	}
 
 	uiTemplate.Execute(w, "ws://"+r.Host+"/sub/"+session)
 }
 
+func home(w http.ResponseWriter, r *http.Request) {
+	homeTemplate.Execute(w, nil)
+}
+
+var homeTemplate = template.Must(template.ParseFiles("./templates/home.html"))
+var notFoundTemplate = template.Must(template.ParseFiles("./templates/not-found.html"))
 var uiTemplate = template.Must(template.ParseFiles("./templates/ui.html"))
