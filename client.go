@@ -128,6 +128,8 @@ func spawnPty(writer chanWriter) error {
 	if err != nil {
 		panic(err)
 	}
+
+	// TODO check for resize
 	writer.Ch <- []byte(fmt.Sprintf("DIM%d,%d", rows, cols))
 
 	go func() { _, _ = io.Copy(ptmx, os.Stdin) }()

@@ -5,6 +5,8 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/gorilla/mux"
@@ -12,6 +14,7 @@ import (
 )
 
 type session struct {
+	dim [2]int
 	w   []*websocket.Conn
 	mux sync.Mutex
 }
@@ -32,7 +35,7 @@ func (s serverState) newSession() (string, error) {
 
 var state = serverState{s: make(map[string]*session)}
 
-var upgrader = websocket.Upgrader{} // use default options
+var upgrader = websocket.Upgrader{}
 
 func share(w http.ResponseWriter, r *http.Request) {
 	sessionName, err := state.newSession()
@@ -48,8 +51,15 @@ func share(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func() {
 		c.Close()
-		// TODO disconnect watchers
-		// TODO remove session
+		s := state.s[sessionName]
+		s.mux.Lock()
+
+		for i := range s.w {
+			s.w[i].WriteMessage(websocket.TextMessage, []byte("TXTDisconnected"))
+			s.w[i].WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+		}
+		delete(state.s, sessionName)
+		s.mux.Unlock()
 	}()
 
 	if err := c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("sharing terminal on %s/s/%s", r.Host, sessionName))); err != nil {
@@ -63,12 +73,22 @@ func share(w http.ResponseWriter, r *http.Request) {
 			log.Println("read:", err)
 			break
 		}
-		session := state.s[sessionName]
-		session.mux.Lock()
-		for i := range session.w {
-			session.w[i].WriteMessage(websocket.TextMessage, message)
+		s := state.s[sessionName]
+		s.mux.Lock()
+		switch string(message[:3]) {
+		case "DIM":
+			parts := strings.Split(string(message[3:]), ",")
+			cols, errC := strconv.Atoi(parts[0])
+			rows, errR := strconv.Atoi(parts[1])
+			if errC == nil && errR == nil {
+				s.dim = [2]int{cols, rows}
+			}
+		default:
 		}
-		session.mux.Unlock()
+		for i := range s.w {
+			s.w[i].WriteMessage(websocket.TextMessage, message)
+		}
+		s.mux.Unlock()
 	}
 }
 
@@ -101,12 +121,12 @@ func sub(w http.ResponseWriter, r *http.Request) {
 	s := state.s[sessionName]
 	s.mux.Lock()
 	s.w = append(s.w, c)
+
+	c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("DIM%d,%d", s.dim[0], s.dim[1])))
+
 	s.mux.Unlock()
 
-	if err := c.WriteMessage(websocket.TextMessage, []byte("TXTconnected")); err != nil {
-		log.Println("read:", err)
-		return
-	}
+	c.WriteMessage(websocket.TextMessage, []byte("TXTConnected\n"))
 }
 
 func webUI(w http.ResponseWriter, r *http.Request) {
