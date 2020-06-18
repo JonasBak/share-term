@@ -2,7 +2,7 @@ package main
 
 import (
 	// "bytes"
-	// "fmt"
+	"fmt"
 	"github.com/creack/pty"
 	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/ssh/terminal"
@@ -21,7 +21,7 @@ type chanWriter struct {
 }
 
 func (w *chanWriter) Write(p []byte) (int, error) {
-	w.Ch <- p
+	w.Ch <- append([]byte("TXT"), p...)
 	return len(p), nil
 }
 
@@ -29,7 +29,7 @@ func Client() {
 	ch := make(chan []byte)
 	exit := make(chan struct{})
 	go connect(ch, exit)
-	SpawnPty(&chanWriter{Ch: ch})
+	SpawnPty(chanWriter{Ch: ch})
 	close(exit)
 }
 
@@ -39,8 +39,8 @@ func connect(ch chan []byte, exit chan struct{}) {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	u := url.URL{Scheme: "ws", Host: *addr, Path: "/echo"}
-	log.Printf("connecting to %s", u.String())
+	u := url.URL{Scheme: "ws", Host: *addr, Path: "/share"}
+	log.Printf("connecting to %s\n", u.String())
 
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
@@ -53,12 +53,12 @@ func connect(ch chan []byte, exit chan struct{}) {
 	go func() {
 		defer close(done)
 		for {
-			_, _, err := c.ReadMessage()
+			_, message, err := c.ReadMessage()
 			if err != nil {
 				log.Println("read:", err)
 				return
 			}
-			// log.Printf("recv: %s", message)
+			log.Printf("from server: %s\n", message)
 		}
 	}()
 
@@ -92,7 +92,7 @@ func connect(ch chan []byte, exit chan struct{}) {
 	}
 }
 
-func SpawnPty(writer io.Writer) error {
+func SpawnPty(writer chanWriter) error {
 	c := exec.Command("bash")
 
 	ptmx, err := pty.Start(c)
@@ -119,8 +119,14 @@ func SpawnPty(writer io.Writer) error {
 	}
 	defer func() { _ = terminal.Restore(int(os.Stdin.Fd()), oldState) }()
 
+	rows, cols, err := pty.Getsize(os.Stdin)
+	if err != nil {
+		panic(err)
+	}
+	writer.Ch <- []byte(fmt.Sprintf("DIM%d,%d", rows, cols))
+
 	go func() { _, _ = io.Copy(ptmx, os.Stdin) }()
-	_, _ = io.Copy(os.Stdout, io.TeeReader(ptmx, writer))
+	_, _ = io.Copy(os.Stdout, io.TeeReader(ptmx, &writer))
 
 	return nil
 }
