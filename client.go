@@ -6,7 +6,6 @@ import (
 	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/ssh/terminal"
 	"io"
-	"log"
 	"net/url"
 	"os"
 	"os/exec"
@@ -42,10 +41,8 @@ func Client() {
 }
 
 func connect(ch chan []byte, exit chan struct{}) (chan struct{}, error) {
-	log.SetFlags(0)
-
 	u := url.URL{Scheme: "ws", Host: *addr, Path: "/share"}
-	log.Printf("connecting to %s\n", u.String())
+	fmt.Printf("Connecting to %s\n", u.String())
 
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
@@ -63,13 +60,13 @@ func connect(ch chan []byte, exit chan struct{}) (chan struct{}, error) {
 			case b := <-ch:
 				err := c.WriteMessage(websocket.TextMessage, b)
 				if err != nil {
-					log.Println("write:", err)
+					fmt.Println("Failed to write to server:", err)
 					return
 				}
 			case <-exit:
 				err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 				if err != nil {
-					log.Println("write close:", err)
+					fmt.Println("Failed to close connection properly", err)
 					return
 				}
 				select {
@@ -86,10 +83,10 @@ func connect(ch chan []byte, exit chan struct{}) (chan struct{}, error) {
 		for {
 			_, message, err := c.ReadMessage()
 			if err != nil {
-				log.Println("read:", err)
+				fmt.Println("Connection closed:", err)
 				return
 			}
-			log.Printf("from server: %s\n", message)
+			fmt.Printf("From server: %s\n", message)
 		}
 	}()
 
@@ -115,7 +112,7 @@ func spawnPty(writer chanWriter) error {
 	go func() {
 		for range ch {
 			if err := pty.InheritSize(os.Stdin, ptmx); err != nil {
-				log.Printf("error resizing pty: %s", err)
+				fmt.Printf("Error resizing pty: %s", err)
 			}
 		}
 	}()
