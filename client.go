@@ -28,30 +28,62 @@ func (w *chanWriter) Write(p []byte) (int, error) {
 func Client() {
 	ch := make(chan []byte)
 	exit := make(chan struct{})
-	go connect(ch, exit)
-	SpawnPty(chanWriter{Ch: ch})
+
+	disconnected, err := connect(ch, exit)
+	if err != nil {
+		panic(err)
+	}
+
+	spawnPty(chanWriter{Ch: ch})
 	close(exit)
+	select {
+	case <-disconnected:
+	case <-time.After(time.Second):
+	}
 }
 
-func connect(ch chan []byte, exit chan struct{}) {
+func connect(ch chan []byte, exit chan struct{}) (chan struct{}, error) {
 	log.SetFlags(0)
-
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
 
 	u := url.URL{Scheme: "ws", Host: *addr, Path: "/share"}
 	log.Printf("connecting to %s\n", u.String())
 
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
-		log.Fatal("dial:", err)
+		return nil, err
 	}
-	defer c.Close()
 
-	done := make(chan struct{})
+	disconnected := make(chan struct{})
 
 	go func() {
-		defer close(done)
+		defer c.Close()
+		for {
+			select {
+			case <-disconnected:
+				return
+			case b := <-ch:
+				err := c.WriteMessage(websocket.TextMessage, b)
+				if err != nil {
+					log.Println("write:", err)
+					return
+				}
+			case <-exit:
+				err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+				if err != nil {
+					log.Println("write close:", err)
+					return
+				}
+				select {
+				case <-disconnected:
+				case <-time.After(time.Second):
+				}
+				return
+			}
+		}
+	}()
+
+	go func() {
+		defer close(disconnected)
 		for {
 			_, message, err := c.ReadMessage()
 			if err != nil {
@@ -62,37 +94,10 @@ func connect(ch chan []byte, exit chan struct{}) {
 		}
 	}()
 
-	for {
-		select {
-		case <-done:
-			return
-		case b := <-ch:
-			err := c.WriteMessage(websocket.TextMessage, b)
-			if err != nil {
-				log.Println("write:", err)
-				return
-			}
-		case <-exit:
-		case <-interrupt:
-			log.Println("interrupt")
-
-			// Cleanly close the connection by sending a close message and then
-			// waiting (with timeout) for the server to close the connection.
-			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-			if err != nil {
-				log.Println("write close:", err)
-				return
-			}
-			select {
-			case <-done:
-			case <-time.After(time.Second):
-			}
-			return
-		}
-	}
+	return disconnected, nil
 }
 
-func SpawnPty(writer chanWriter) error {
+func spawnPty(writer chanWriter) error {
 	c := exec.Command("bash")
 
 	ptmx, err := pty.Start(c)
