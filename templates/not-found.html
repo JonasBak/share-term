@@ -1,35 +1,13 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
-<style>
-  html {
-    height: 100%;
-    background-color: #262626;
-    font-family: 'Roboto Mono', monospace;
-  }
-  body {
-    display: flex;
-    height: 100%;
-    margin: 0px;
-    justify-content: center;
-    align-items: center;
-  }
-  #message {
-    display: inline-block;
-    padding: 40px;
-    box-shadow: 10px 8px #0009;
-    background-color: #000;
-    color: white;
-  }
-</style>
-</head>
-<body>
+{{define "content"}}
 <div id="message">
-  The session <b>{{.}}</b> doesn't seem to exist,<br>
-  maybe the sharer disconnected?<br>
-  <a href="/">Return to front page</a>
+<pre>
+$ <b>{{.}}</b>
+<b>{{.}}</b>: session not found...
+$ man share-term
+No manual entry for share-term
+
+
+$ # <a href="/">return to front page</a>
+</pre>
 </div>
-</body>
-</html>
+{{end}}

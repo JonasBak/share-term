@@ -1,35 +1,18 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
-<style>
-  html {
-    height: 100%;
-    background-color: #262626;
-    font-family: 'Roboto Mono', monospace;
-  }
-  body {
-    display: flex;
-    height: 100%;
-    margin: 0px;
-    justify-content: center;
-    align-items: center;
-  }
-  #message {
-    display: inline-block;
-    padding: 40px;
-    box-shadow: 10px 8px #0009;
-    background-color: #000;
-    color: white;
-  }
-</style>
-</head>
-<body>
+{{define "content"}}
 <div id="message">
-  <h1>share-term</h1>
-  Check the project out at
-  <a href="https://github.com/JonasBak/share-term">github</a>
+<pre>
+$ <b># SHARE-TERM</b>
+
+$ <b># install</b>
+$ go get -v github.com/JonasBak/share-term
+
+$ <b># run</b>
+$ share-term
+Connecting to server
+From server: sharing terminal on localhost:8080/s/7166d42b
+$
+
+$ <b># check out the project at <a href="https://github.com/JonasBak/share-term">github.com/JonasBak/share-term</a></b>
+</pre>
 </div>
-</body>
-</html>
+{{end}}

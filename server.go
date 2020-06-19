@@ -40,6 +40,10 @@ var state = serverState{s: make(map[string]*session)}
 
 var upgrader = websocket.Upgrader{}
 
+var homeTemplate *template.Template
+var notFoundTemplate *template.Template
+var uiTemplate *template.Template
+
 func share(w http.ResponseWriter, r *http.Request) {
 	sessionName := state.newSession()
 
@@ -109,6 +113,10 @@ func share(w http.ResponseWriter, r *http.Request) {
 }
 
 func Server() {
+	homeTemplate = template.Must(template.ParseFiles("./templates/base.html", "./templates/home.html"))
+	notFoundTemplate = template.Must(template.ParseFiles("./templates/base.html", "./templates/not-found.html"))
+	uiTemplate = template.Must(template.ParseFiles("./templates/base.html", "./templates/ui.html"))
+
 	router := mux.NewRouter()
 	router.HandleFunc("/share", share)
 	router.HandleFunc("/sub/{session:[a-zA-Z0-9]+}", sub)
@@ -167,7 +175,3 @@ func webUI(w http.ResponseWriter, r *http.Request) {
 func home(w http.ResponseWriter, r *http.Request) {
 	homeTemplate.Execute(w, nil)
 }
-
-var homeTemplate = template.Must(template.ParseFiles("./templates/home.html"))
-var notFoundTemplate = template.Must(template.ParseFiles("./templates/not-found.html"))
-var uiTemplate = template.Must(template.ParseFiles("./templates/ui.html"))
