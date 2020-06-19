@@ -114,6 +114,12 @@ func spawnPty(writer chanWriter) error {
 			if err := pty.InheritSize(os.Stdin, ptmx); err != nil {
 				fmt.Printf("Error resizing pty: %s", err)
 			}
+			rows, cols, err := pty.Getsize(os.Stdin)
+			if err == nil {
+				writer.Ch <- []byte(fmt.Sprintf("DIM%d,%d", rows, cols))
+			} else {
+				fmt.Printf("Error resizing pty on server: %s", err)
+			}
 		}
 	}()
 	ch <- syscall.SIGWINCH
@@ -123,14 +129,6 @@ func spawnPty(writer chanWriter) error {
 		panic(err)
 	}
 	defer func() { _ = terminal.Restore(int(os.Stdin.Fd()), oldState) }()
-
-	rows, cols, err := pty.Getsize(os.Stdin)
-	if err != nil {
-		panic(err)
-	}
-
-	// TODO check for resize
-	writer.Ch <- []byte(fmt.Sprintf("DIM%d,%d", rows, cols))
 
 	go func() { _, _ = io.Copy(ptmx, os.Stdin) }()
 	_, _ = io.Copy(os.Stdout, io.TeeReader(ptmx, &writer))
