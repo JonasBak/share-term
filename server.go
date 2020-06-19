@@ -93,7 +93,6 @@ func share(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		s := state.s[sessionName]
-		s.mux.Lock()
 		switch string(message[:3]) {
 		case "DIM":
 			parts := strings.Split(string(message[3:]), ",")
@@ -104,15 +103,17 @@ func share(w http.ResponseWriter, r *http.Request) {
 			}
 		default:
 		}
+		s.mux.Lock()
 		for i := range s.w {
 			s.w[i].WriteMessage(websocket.TextMessage, message)
-			// TODO remove if fails/user has left
 		}
 		s.mux.Unlock()
 	}
 }
 
 func Server() {
+	log.SetLevel(log.DebugLevel)
+
 	homeTemplate = template.Must(template.ParseFiles("./templates/base.html", "./templates/home.html"))
 	notFoundTemplate = template.Must(template.ParseFiles("./templates/base.html", "./templates/not-found.html"))
 	uiTemplate = template.Must(template.ParseFiles("./templates/base.html", "./templates/ui.html"))
@@ -147,16 +148,38 @@ func sub(w http.ResponseWriter, r *http.Request) {
 	s := state.s[sessionName]
 	s.mux.Lock()
 	s.w = append(s.w, c)
+	s.mux.Unlock()
 
 	c.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("DIM%d,%d", s.dim[0], s.dim[1])))
 
-	s.mux.Unlock()
-
 	log.WithFields(log.Fields{
 		"session": sessionName,
-	}).Info("Added new watcher")
+	}).Debug("Watcher joined")
 
 	c.WriteMessage(websocket.TextMessage, []byte("TXTConnected\n"))
+
+	for {
+		_, _, err := c.ReadMessage()
+		if err != nil {
+			if s, exists := state.s[sessionName]; exists {
+				s.mux.Lock()
+				// TODO use set for constant lookup
+				for i := range s.w {
+					if s.w[i] == c {
+						s.w[i] = s.w[len(s.w)-1]
+						s.w = s.w[:len(s.w)-1]
+						break
+					}
+				}
+				s.mux.Unlock()
+			}
+			log.WithFields(log.Fields{
+				"session": sessionName,
+				"status":  err,
+			}).Debug("Watcher left")
+			break
+		}
+	}
 }
 
 func webUI(w http.ResponseWriter, r *http.Request) {
