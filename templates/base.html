@@ -1,38 +1,54 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/xterm/3.14.5/xterm.css" integrity="sha256-RogLy8bOb4a5F5dhZEi0c6gSwYTUgD7h8rfGj9ogn0c=" crossorigin="anonymous" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xterm/3.14.5/xterm.js" integrity="sha256-hfiSuSTn85uwFJbguowMQcYdLqr1fERvIjn270bW4Ck=" crossorigin="anonymous"></script>
-<style>
-  html {
-    height: 100%;
-    background-color: #262626;
-    font-family: 'Roboto Mono', monospace;
-  }
-  body {
-    display: flex;
-    height: 100%;
-    margin: 0px;
-    justify-content: center;
-    align-items: center;
-  }
-  #message {
-    display: inline-block;
-    padding: 40px;
-    box-shadow: 10px 8px #0009;
-    background-color: #000;
-    color: white;
-  }
-  #terminal {
-    display: inline-block;
-    box-shadow: 10px 8px #0009;
-    border: 2px solid gray;
-  }
-</style>
-</head>
-<body>
-  {{template "content" .}}
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/xterm/3.14.5/xterm.css"
+      integrity="sha256-RogLy8bOb4a5F5dhZEi0c6gSwYTUgD7h8rfGj9ogn0c="
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/xterm/3.14.5/xterm.js"
+      integrity="sha256-hfiSuSTn85uwFJbguowMQcYdLqr1fERvIjn270bW4Ck="
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      html {
+        height: 100%;
+        background-color: #262626;
+        font-family: "Roboto Mono", monospace;
+      }
+
+      body {
+        display: flex;
+        height: 100%;
+        margin: 0px;
+        justify-content: center;
+        align-items: center;
+      }
+
+      #message {
+        display: inline-block;
+        padding: 40px;
+        box-shadow: 10px 8px #0009;
+        background-color: #000;
+        color: white;
+      }
+
+      #terminal {
+        display: inline-block;
+        box-shadow: 10px 8px #0009;
+        border: 2px solid gray;
+      }
+    </style>
+  </head>
+
+  <body>
+    {{template "content" .}}
+  </body>
 </html>

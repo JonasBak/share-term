@@ -1,18 +1,14 @@
 {{define "content"}}
 <script type="text/javascript">
-  window.addEventListener("load", evt => {
+  window.addEventListener("load", (evt) => {
     const ws = new WebSocket("{{.}}");
     const term = new Terminal();
 
-    term.open(document.getElementById('terminal'));
+    term.open(document.getElementById("terminal"));
 
-    ws.onopen = evt => {
-    }
-    ws.onclose = evt => {
-    }
-    ws.onmessage = evt => {
-      const type = evt.data.substring(0,3);
-      switch(type) {
+    ws.onmessage = (evt) => {
+      const type = evt.data.substring(0, 3);
+      switch (type) {
         case "TXT":
           term.write(evt.data.substring(3));
           break;
@@ -23,11 +19,11 @@
         default:
           console.err("could not parse message: " + evt.data);
       }
-    }
-    ws.onerror = evt => {
+    };
+    ws.onerror = (evt) => {
       alert("ERROR: " + evt.data);
-    }
+    };
   });
 </script>
 <div id="terminal"></div>
-{{end}}
+{{ end }}
