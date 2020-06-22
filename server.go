@@ -192,9 +192,9 @@ func webUI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	uiTemplate.Execute(w, "ws://"+r.Host+"/sub/"+session)
+	uiTemplate.Execute(w, getScheme()+"://"+r.Host+"/sub/"+session)
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
-	homeTemplate.Execute(w, nil)
+	homeTemplate.Execute(w, r.Host)
 }

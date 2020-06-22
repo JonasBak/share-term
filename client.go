@@ -41,7 +41,7 @@ func Client() {
 }
 
 func connect(ch chan []byte, exit chan struct{}) (chan struct{}, error) {
-	u := url.URL{Scheme: "ws", Host: *addr, Path: "/share"}
+	u := url.URL{Scheme: getScheme(), Host: *addr, Path: "/share"}
 	fmt.Printf("Connecting to %s\n", u.String())
 
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
