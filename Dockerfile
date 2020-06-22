@@ -17,4 +17,5 @@ COPY ./templates ./templates
 
 EXPOSE 8080
 
-CMD ["./share-term", "-server", "-addr", "0.0.0.0:8080"]
+ENTRYPOINT ["./share-term"]
+CMD ["-server", "-addr", "0.0.0.0:8080"]
